@@ -3,11 +3,7 @@ import datetime
 import os
 import subprocess
 import json
-
 import logging
-
-import time
-
 import requests
 from databricks_cli.configure.provider import ProfileConfigProvider, DEFAULT_SECTION, update_and_persist_config, \
     DatabricksConfig
