@@ -151,7 +151,7 @@ if __name__ == '__main__':
                 if scope_name in existing_scopes:
                     # Create the scope
                     logging.info(f'Deleting secret scope: {scope_name}')
-                    delete_query = f'databricks secrets create-scope --profile {profile}'
+                    delete_query = f'databricks secrets delete-scope --profile {profile}'
                     delete_query += f' --scope {scope_name}'
 
                     # Run and enforce success
