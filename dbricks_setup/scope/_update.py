@@ -2,7 +2,7 @@ from argparse import Namespace
 
 import logging
 
-from ..utils._groups import get_groups
+from ..utils._groups import create_groups, get_groups
 from ..utils._profile import extract_profile, set_aad_scope
 from ..utils.scope._extract import extract_scopes
 from ..utils.scope._delete import delete_scope
@@ -54,3 +54,16 @@ def update_scope(args: Namespace):
                 resource_id=args.resource_id,
                 key_vault_name=args.key_vault
             )
+
+    # Construct the access groups
+    accesses = ['read', 'write', 'manage']
+    access_groups = {
+        f'scope-{scope_name}-{access}': access.upper()
+        for access in accesses
+    }
+
+    # Filter and create the missing groups
+    missing_groups = [group for group in access_groups if group not in groups]
+
+    if missing_groups:
+        create_groups(missing_groups, profile)
