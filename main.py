@@ -45,6 +45,28 @@ cluster_update_parser.add_argument('-r', action='store_true', help='Allow cluste
 required_args = cluster_update_parser.add_argument_group('required arguments')
 required_args.add_argument('--name', type=str, help='The cluster name', required=True)
 
+
+# cluster delete commands
+cluster_delete_parser = cluster_subparsers.add_parser(
+    'delete',
+    help='Cluster deletion commands',
+    description="Delete clusters and connected items"
+)
+cluster_delete_parser.set_defaults(which='cluster_delete')
+
+# Optional arguments
+cluster_delete_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+cluster_delete_parser.add_argument('-a', action='store_true', help='Delete all resources')
+cluster_delete_parser.add_argument('-c', action='store_true', help='Delete control lists')
+cluster_delete_parser.add_argument('-d', action='store_true', help='Debug, does not perform the deletes')
+cluster_delete_parser.add_argument('-g', action='store_true', help='Delete groups')
+cluster_delete_parser.add_argument('-q', action='store_true', help='Quiet')
+cluster_delete_parser.add_argument('-s', action='store_true', help='Delete cluster')
+
+# Required arguments
+required_args = cluster_delete_parser.add_argument_group('required arguments')
+required_args.add_argument('--name', type=str, help='Name override for cluster, case insensitive')
+
 # scope level commands
 scope_parser = subparsers.add_parser(
     'scope',
