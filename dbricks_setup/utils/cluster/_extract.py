@@ -1,3 +1,4 @@
+import json
 import subprocess
 from typing import Dict, List
 
@@ -35,3 +36,41 @@ def extract_clusters(profile: str) -> List[Dict[str, str]]:
                          cluster_lines]
 
     return existing_clusters
+
+
+def extract_spark(profile: str) -> Dict[str, str]:
+    """Get the current spark version from the configured workspace
+
+    :param str profile: The profile configured for the workspace
+
+    :return: The current spark version
+    :rtype: Dict[str, str]
+    """
+
+    # Get the current spark versions
+    spark_query = 'databricks clusters spark-versions'
+    spark_query += f' --profile {profile}'
+
+    # Run and enforce success
+    sp = subprocess.run(spark_query, capture_output=True)
+    sp.check_returncode()
+
+    # Filter the spark versions
+    spark_versions = json.loads(sp.stdout)['versions']
+    valid_versions = [
+        v
+        for v
+        in spark_versions
+        if (
+                'gpu' not in v['key']
+                and 'cpu' not in v['key']
+                and 'photon' not in v['key']
+                and 'apache' not in v['key']
+        )
+    ]
+    valid_versions = sorted(valid_versions, key=lambda x: x['key'])
+
+    # Get the last version
+    last_version = valid_versions[-1]
+
+    return last_version
