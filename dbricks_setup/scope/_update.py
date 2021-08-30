@@ -1,5 +1,6 @@
 from argparse import Namespace
-from databricks_cli.configure.provider import DatabricksConfig
+
+import logging
 
 from ..utils._groups import get_groups
 from ..utils._profile import extract_profile
@@ -21,4 +22,13 @@ def update_scope(args: Namespace):
 
     # Get the existing scopes
     scopes = extract_scopes(profile)
-    print(scopes)
+
+    # Check scope name
+    scope_name = args.scope_name
+    if not scope_name:
+        scope_name = args.key_vault
+
+    # Check scope existence
+    if scope_name in scopes and not args.f:
+        logging.warning(
+            f'Scope {scope_name} already exists. Please remove if misconfigured, consider using the -f flag to force an update.')
