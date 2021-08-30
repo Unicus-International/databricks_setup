@@ -7,13 +7,13 @@ from ..utils._profile import extract_profile, set_aad_scope
 from ..utils.scope._acl import get_acls, set_acls
 from ..utils.scope._create import create_scope
 from ..utils.scope._delete import delete_scope
-from ..utils.scope._extract import extract_scopes
+from ..utils.cluster._extract import extract_clusters
 
 logger = logging.getLogger(__name__)
 
 
 def update_cluster_cli(args: Namespace):
-    """Updates the secret scope configuration of the databricks instance defined in the current profile
+    """Updates the cluster configuration of the databricks instance defined in the current profile
 
     :param Namespace args: The arguments from the cli
     :return:
@@ -25,8 +25,10 @@ def update_cluster_cli(args: Namespace):
     # Get the workspace groups
     groups = get_groups(profile)
 
-    # Get the existing scopes
-    scopes = extract_scopes(profile)
+    # Get the existing cluster
+    clusters = extract_clusters(profile)
+    print(clusters)
+    return
 
     # Check scope name
     scope_name = args.scope_name
