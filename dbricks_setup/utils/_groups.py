@@ -41,15 +41,32 @@ def create_groups(groups: List[str], profile: str):
 
 
 def create_group(group: str, profile: str):
-    """Create a set of groups in the configured workspace
+    """Create a group in the configured workspace
 
     :param str group: The group to create
     :param str profile: The profile configured for the workspace
     """
-    logging.info(f'Creating Group: {group}')
+    logger.info(f'Creating Group: {group}')
     create_query = f'databricks groups create --profile {profile}'
     create_query += f' --group-name {group}'
 
     # Run and enforce success
     sp = subprocess.run(create_query, capture_output=True)
+    sp.check_returncode()
+
+
+def delete_group(group: str, profile: str):
+    """Delete a group in the configured workspace
+
+    :param str group: The group to delete
+    :param str profile: The profile configured for the workspace
+    """
+    # Remove the existing group
+    group_query = 'databricks groups delete'
+    group_query += f' --profile {profile}'
+    group_query += f' --group-name {group}'
+
+    # Run and enforce success
+    logger.warning(f'Removing group {group}')
+    sp = subprocess.run(group_query, capture_output=True)
     sp.check_returncode()

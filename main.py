@@ -168,7 +168,7 @@ if __name__ == '__main__':
             for access in accesses
         }
 
-        # Filter the missing groups
+        # Filter the existing groups
         existing_groups = [group for group in access_groups if group in groups]
 
         if scope_exists:
