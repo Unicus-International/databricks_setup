@@ -51,6 +51,22 @@ required_args = scope_update_parser.add_argument_group('required arguments')
 required_args.add_argument('--key-vault', type=str, help='The the key vault name', required=True)
 required_args.add_argument('--resource-id', type=str, help='The the key vault resource id', required=True)
 
+# scope delete commands
+scope_delete_parser = scope_subparsers.add_parser(
+    'delete',
+    help='Secret scope deletion commands',
+    description="Delete secret scopes and connected items"
+)
+scope_delete_parser.set_defaults(which='scope_delete')
+
+# Optional arguments
+scope_delete_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+# scope_delete_parser.add_argument('-f', action='store_true', help='Force deletion of existing secret scope')
+
+# Required arguments
+required_args = scope_delete_parser.add_argument_group('required arguments')
+required_args.add_argument('--scope-name', type=str, help='Name override for the secret scope')
+
 if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
