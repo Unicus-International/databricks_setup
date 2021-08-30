@@ -61,7 +61,11 @@ scope_delete_parser.set_defaults(which='scope_delete')
 
 # Optional arguments
 scope_delete_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
-# scope_delete_parser.add_argument('-f', action='store_true', help='Force deletion of existing secret scope')
+scope_delete_parser.add_argument('-a', action='store_true', help='Delete all resources')
+scope_delete_parser.add_argument('-c', action='store_true', help='Delete control lists')
+scope_delete_parser.add_argument('-g', action='store_true', help='Delete groups')
+scope_delete_parser.add_argument('-q', action='store_true', help='Quiet')
+scope_delete_parser.add_argument('-s', action='store_true', help='Delete scope')
 
 # Required arguments
 required_args = scope_delete_parser.add_argument_group('required arguments')
