@@ -144,7 +144,8 @@ if __name__ == '__main__':
 
         # Filter the missing groups
         missing_groups = [group for group in access_groups if group not in groups]
-        logging.info(f'Creating groups: {missing_groups}')
+        if missing_groups:
+            logging.info(f'Creating groups: {missing_groups}')
 
         # Create groups
         for group in missing_groups:
@@ -155,3 +156,74 @@ if __name__ == '__main__':
             # Run and enforce success
             sp = subprocess.run(create_query, capture_output=True)
             sp.check_returncode()
+
+        # Get the acls for the scope
+        acl_query = 'databricks secrets list-acls'
+        acl_query += f' --profile {profile}'
+        acl_query += f' --scope {scope_name}'
+
+        # Run and enforce success
+        sp = subprocess.run(acl_query, capture_output=True)
+        sp.check_returncode()
+
+        # Extract the existing scopes
+        acl_lines = [l.strip('\r') for l in sp.stdout.decode().split('\n')[1:]]
+        acl_lines = [l for l in acl_lines if l.replace('-', '').strip()]
+        acl_lines = [[elem for elem in l.split(' ') if elem] for l in acl_lines]
+        existing_acls = {acl[0]: acl[1] for acl in acl_lines}
+
+        # Add the acls
+        for group, permission in access_groups.items():
+            # Add new groups
+            if group not in existing_acls:
+                # Add the acl
+                acl_query = 'databricks secrets put-acl'
+                acl_query += f' --profile {profile}'
+                acl_query += f' --scope {scope_name}'
+                acl_query += f' --principal {group}'
+                acl_query += f' --permission {permission}'
+
+                # Run and enforce success
+                logging.info(f'Adding {permission} to {scope_name} for {group}')
+                sp = subprocess.run(acl_query, capture_output=True)
+                sp.check_returncode()
+
+            # Update misconfigured acls
+            elif existing_acls.get(group, None) != permission:
+                # Remove the existing acl
+                acl_query = 'databricks secrets delete-acl'
+                acl_query += f' --profile {profile}'
+                acl_query += f' --scope {scope_name}'
+                acl_query += f' --principal {group}'
+
+                # Run and enforce success
+                logging.warning(f'Removing existing acl to {scope_name} for {group}')
+                sp = subprocess.run(acl_query, capture_output=True)
+                sp.check_returncode()
+
+                # Add the acl
+                acl_query = 'databricks secrets put-acl'
+                acl_query += f' --profile {profile}'
+                acl_query += f' --scope {scope_name}'
+                acl_query += f' --principal {group}'
+                acl_query += f' --permission {permission}'
+
+                # Run and enforce success
+                logging.info(f'Adding {permission} to {scope_name} for {group}')
+                sp = subprocess.run(acl_query, capture_output=True)
+                sp.check_returncode()
+
+        # Clean up the access roles
+        for principal in existing_acls:
+            if principal not in access_groups:
+                # Remove the acl
+                acl_query = 'databricks secrets delete-acl'
+                acl_query += f' --profile {profile}'
+                acl_query += f' --scope {scope_name}'
+                acl_query += f' --principal {principal}'
+
+                # Run and enforce success
+                logging.warning(f'Removing acl to {scope_name} for {principal}')
+                sp = subprocess.run(acl_query, capture_output=True)
+                sp.check_returncode()
+        print(existing_acls)
