@@ -8,6 +8,7 @@ from ..utils.scope._acl import get_acls, set_acls
 from ..utils.scope._create import create_scope
 from ..utils.scope._delete import delete_scope
 from ..utils.cluster._config import create_config
+from ..utils.cluster._create import create_cluster
 from ..utils.cluster._extract import extract_clusters
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,8 @@ def update_cluster_cli(args: Namespace):
     # Create the cluster configuration
     cluster_config = create_config(cluster_name, profile)
 
-    print(cluster_config)
+    if not matching_clusters:
+        create_cluster(profile, cluster_config)
     return
 
     # Check scope name
