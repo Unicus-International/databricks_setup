@@ -12,7 +12,7 @@ from ..utils.scope._extract import extract_scopes
 logger = logging.getLogger(__name__)
 
 
-def update_scope(args: Namespace):
+def update_scope_cli(args: Namespace):
     """Updates the secret scope configuration of the databricks instance defined in the current profile
 
     :param Namespace args: The arguments from the cli

@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from .scope._update import update_scope
+from .scope import delete_scope_cli, update_scope_cli
 
 
 def cli():
@@ -122,7 +122,9 @@ def cli():
     args = parser.parse_args()
 
     if args.which == 'scope_update':
-        update_scope(args)
+        update_scope_cli(args)
+    elif args.which == 'scope_delete':
+        delete_scope_cli(args)
 
 
 if __name__ == '__main__':
