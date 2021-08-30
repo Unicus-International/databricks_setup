@@ -5,6 +5,7 @@ import logging
 from ..utils._groups import get_groups
 from ..utils._profile import extract_profile, set_aad_scope
 from ..utils.scope._extract import extract_scopes
+from ..utils.scope._delete import delete_scope
 
 
 def update_scope(args: Namespace):
@@ -39,3 +40,8 @@ def update_scope(args: Namespace):
         if create:
             # Update the azure ad profile if needed
             set_aad_scope(base_config)
+
+            # Delete if exists
+            if scope_name in scopes:
+                # Delete the scope
+                delete_scope(scope_name, profile)
