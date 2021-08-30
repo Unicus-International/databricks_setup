@@ -135,11 +135,23 @@ if __name__ == '__main__':
             sp = subprocess.run(create_query, capture_output=True)
             sp.check_returncode()
 
+        # Construct the access groups
         accesses = ['read', 'write', 'manage']
         access_groups = {
             f'scope-{scope_name}-{access}': access.upper()
             for access in accesses
         }
 
+        # Filter the missing groups
         missing_groups = [group for group in access_groups if group not in groups]
-        print(missing_groups)
+        logging.info(f'Creating groups: {missing_groups}')
+
+        # Create groups
+        for group in missing_groups:
+            logging.info(f'Creating Group: {group}')
+            create_query = f'databricks groups create --profile {profile}'
+            create_query += f' --group-name {group}'
+
+            # Run and enforce success
+            sp = subprocess.run(create_query, capture_output=True)
+            sp.check_returncode()
