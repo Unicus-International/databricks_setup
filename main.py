@@ -12,7 +12,7 @@ cluster_parser.set_defaults(which='cluster')
 
 required_args = cluster_parser.add_argument_group('required arguments')
 cluster_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
-required_args.add_argument('--name', type=str, help='The the cluster name')
+required_args.add_argument('--name', type=str, help='The the cluster name', required=True)
 
 scope_parser = subparsers.add_parser('scope', help='Secret scope commands')
 scope_parser.set_defaults(which='scope')
