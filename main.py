@@ -18,15 +18,31 @@ subparsers = parser.add_subparsers(help='Sub commands')
 parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
 
 # cluster level commands
-cluster_parser = subparsers.add_parser('cluster', help='Cluster commands')
+cluster_parser = subparsers.add_parser(
+    'cluster',
+    help='Cluster commands',
+    description='Cluster commands'
+)
 cluster_parser.set_defaults(which='cluster')
+cluster_subparsers = cluster_parser.add_subparsers(help='Sub commands')
 
 # Optional arguments
 cluster_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
 
+# cluster create commands
+cluster_update_parser = cluster_subparsers.add_parser(
+    'update',
+    help='cluster creation/update commands',
+    description="Create and/or update configure a cluster, updates include rbac/acls for the cluster"
+)
+cluster_update_parser.set_defaults(which='cluster_update')
+
+# Optional arguments
+cluster_update_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+
 # Required arguments
-required_args = cluster_parser.add_argument_group('required arguments')
-required_args.add_argument('--name', type=str, help='The the cluster name', required=True)
+required_args = cluster_update_parser.add_argument_group('required arguments')
+required_args.add_argument('--name', type=str, help='The cluster name', required=True)
 
 # scope level commands
 scope_parser = subparsers.add_parser(
