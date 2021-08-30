@@ -8,13 +8,18 @@ parser.add_argument('--profile', type=str, help='The databricks cli profile to u
 subparsers = parser.add_subparsers(help='Sub commands')
 
 cluster_parser = subparsers.add_parser('cluster', help='Cluster commands')
+cluster_parser.set_defaults(which='cluster')
+
+required_args = cluster_parser.add_argument_group('required arguments')
 cluster_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
-cluster_parser.add_argument('--name', type=str, help='The the cluster name')
+required_args.add_argument('--name', type=str, help='The the cluster name')
 
 scope_parser = subparsers.add_parser('scope', help='Secret scope commands')
+scope_parser.set_defaults(which='scope')
+required_args = scope_parser.add_argument_group('required arguments')
 scope_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
-scope_parser.add_argument('--key-vault', type=str, help='The the key vault name')
-scope_parser.add_argument('--resource-id', type=str, help='The the key vault resource id')
+required_args.add_argument('--key-vault', type=str, help='The the key vault name', required=True)
+required_args.add_argument('--resource-id', type=str, help='The the key vault resource id', required=True)
 
 
 if __name__ == '__main__':
