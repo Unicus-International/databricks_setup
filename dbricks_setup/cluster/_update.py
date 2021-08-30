@@ -18,6 +18,8 @@ def update_cluster_cli(args: Namespace):
     :param Namespace args: The arguments from the cli
     :return:
     """
+    # Set the name
+    cluster_name = args.name.lower()
 
     # Get the base profile
     profile, base_config = extract_profile(args)
@@ -27,7 +29,15 @@ def update_cluster_cli(args: Namespace):
 
     # Get the existing cluster
     clusters = extract_clusters(profile)
-    print(clusters)
+
+    # Get the clusters matching the desired name
+    matching_clusters = [
+        cluster
+        for cluster
+        in clusters
+        if cluster['name'].lower() == cluster_name
+    ]
+    print(matching_clusters)
     return
 
     # Check scope name
