@@ -7,6 +7,8 @@ import json
 import logging
 
 import time
+
+import requests
 from databricks_cli.configure.provider import ProfileConfigProvider, DEFAULT_SECTION, update_and_persist_config, \
     DatabricksConfig
 
@@ -527,6 +529,14 @@ if __name__ == '__main__':
                 sp = subprocess.run(terminate_query, capture_output=True)
                 sp.check_returncode()
 
+            matching_clusters.append(
+                {
+                    'name': cluster_name,
+                    'cluster_id': cluster_id,
+                    'status': 'NEW'
+                }
+            )
+
         access_groups = {
             f'cluster-{cluster_name}-manage': 'CAN_MANAGE',
             f'cluster-{cluster_name}-restart': 'CAN_RESTART',
@@ -547,3 +557,30 @@ if __name__ == '__main__':
             logging.info(f'Creating Group: {group}')
             sp = subprocess.run(create_query, capture_output=True)
             sp.check_returncode()
+
+        # Access the permissions api
+        api_version = '/api/2.0'
+        headers = {'Authorization': f"Bearer {base_cfg.token}"}
+
+        permissions = {
+            'access_control_list': [
+                {
+                    'group_name': group,
+                    'permission_level': permission
+                }
+                for group, permission
+                in access_groups.items()
+            ]
+        }
+
+        # Get the existing permissions
+        for cluster in matching_clusters:
+            cluster_id = cluster['cluster_id']
+            api_command = f'/permissions/clusters/{cluster_id}'
+            url = f"{base_cfg.host.rstrip('/')}{api_version}{api_command}"
+            r = requests.put(
+                url=url,
+                headers=headers,
+                json=permissions
+            )
+            logging.info(f'Permissions updated to {json.dumps(r.json(), indent=2)}')
