@@ -4,9 +4,10 @@ import logging
 
 from ..utils._groups import create_groups, get_groups
 from ..utils._profile import extract_profile, set_aad_scope
-from ..utils.scope._extract import extract_scopes
-from ..utils.scope._delete import delete_scope
+from ..utils.scope._acl import get_acls
 from ..utils.scope._create import create_scope
+from ..utils.scope._delete import delete_scope
+from ..utils.scope._extract import extract_scopes
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,9 @@ def update_scope(args: Namespace):
 
     # Filter and create the missing groups
     missing_groups = [group for group in access_groups if group not in groups]
-
     if missing_groups:
         create_groups(missing_groups, profile)
+
+    # Get the existing acls for the secret scope
+    acls = get_acls(scope_name, profile)
+    print(acls)

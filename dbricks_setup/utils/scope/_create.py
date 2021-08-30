@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def create_scope(scope: str, resource_id: str, key_vault_name: str):
     """Function for creating a secret scope from databricks
 
-    :param str scope: The scope to delete
+    :param str scope: The scope to create
     :param str resource_id: The resource id of the key vault
     :param str key_vault_name: The key vault to add
     """
