@@ -3,8 +3,12 @@ import datetime
 import os
 import subprocess
 import json
+
+import logging
 from databricks_cli.configure.provider import ProfileConfigProvider, DEFAULT_SECTION, update_and_persist_config, \
     DatabricksConfig
+
+logging.basicConfig(level=logging.INFO)
 
 parser = argparse.ArgumentParser(description='CLI for helping set up databricks.')
 parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
@@ -21,6 +25,7 @@ scope_parser = subparsers.add_parser('scope', help='Secret scope commands')
 scope_parser.set_defaults(which='scope')
 required_args = scope_parser.add_argument_group('required arguments')
 scope_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+scope_parser.add_argument('--scope-name', type=str, help='Name override for the secret scope')
 required_args.add_argument('--key-vault', type=str, help='The the key vault name', required=True)
 required_args.add_argument('--resource-id', type=str, help='The the key vault resource id', required=True)
 
@@ -47,6 +52,7 @@ if __name__ == '__main__':
     sp = subprocess.run(group_query, capture_output=True)
     sp.check_returncode()
     groups = json.loads(sp.stdout)
+    print(groups)
     print(args)
     print(base_cfg.__dict__)
 
@@ -93,3 +99,37 @@ if __name__ == '__main__':
         if cfg is None:
             raise EnvironmentError(f'The profile {profile} has not been configured please add it to the databricks cli.')
         print(cfg.__dict__)
+
+        scope_query = 'databricks secrets list-scopes'
+
+        # Update the cli call with the appropriate profile
+        if args.profile is not None:
+            scope_query += f' --profile {args.profile}'
+        sp = subprocess.run(scope_query, capture_output=True)
+        sp.check_returncode()
+
+        # Extract the existing scopes
+        scope_lines = [l.strip('\r') for l in sp.stdout.decode().split('\n')[1:]]
+        scope_lines = [l for l in scope_lines if l.replace('-', '').strip()]
+        scope_lines = [[elem for elem in l.split(' ') if elem] for l in scope_lines]
+        existing_scopes = {scope[0]: {'backend': scope[1], 'url': scope[2]} for scope in scope_lines}
+
+        # Check scope name
+        scope_name = args.scope_name
+        if not scope_name:
+            scope_name = args.key_vault
+
+        # Check scope existence
+        if scope_name in existing_scopes:
+            logging.warning(f'Scope {scope_name} already exists. Please remove if misconfigured')
+        else:
+            # Create the scope
+            logging.info(f'Creating secret scope: {scope_name}')
+            create_query = 'databricks secrets create-scope --profile AAD'
+            create_query += f' --scope {scope_name}'
+            create_query += f' --scope-backend-type AZURE_KEYVAULT'
+            create_query += f' --resource-id {args.resource_id}'
+            create_query += f' --dns-name https://{args.key_vault}.vault.azure.net/'
+            sp = subprocess.run(create_query, capture_output=True)
+            sp.check_returncode()
+
