@@ -4,7 +4,7 @@ import logging
 
 from ..utils._groups import create_groups, get_groups
 from ..utils._profile import extract_profile, set_aad_scope
-from ..utils.scope._acl import get_acls
+from ..utils.scope._acl import get_acls, set_acls
 from ..utils.scope._create import create_scope
 from ..utils.scope._delete import delete_scope
 from ..utils.scope._extract import extract_scopes
@@ -70,4 +70,6 @@ def update_scope(args: Namespace):
 
     # Get the existing acls for the secret scope
     acls = get_acls(scope_name, profile)
-    print(acls)
+
+    # Update the acls
+    set_acls(acls, access_groups, scope_name, profile)
