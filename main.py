@@ -10,15 +10,22 @@ from databricks_cli.configure.provider import ProfileConfigProvider, DEFAULT_SEC
 
 logging.basicConfig(level=logging.INFO)
 
+# Top level
 parser = argparse.ArgumentParser(description='CLI for helping set up databricks.')
-parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
 subparsers = parser.add_subparsers(help='Sub commands')
 
+# Optional arguments
+parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+
+# cluster level commands
 cluster_parser = subparsers.add_parser('cluster', help='Cluster commands')
 cluster_parser.set_defaults(which='cluster')
 
-required_args = cluster_parser.add_argument_group('required arguments')
+# Optional arguments
 cluster_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+
+# Required arguments
+required_args = cluster_parser.add_argument_group('required arguments')
 required_args.add_argument('--name', type=str, help='The the cluster name', required=True)
 
 # scope level commands
