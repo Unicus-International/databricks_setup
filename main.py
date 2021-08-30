@@ -50,8 +50,7 @@ if __name__ == '__main__':
     # Run the group query
     sp = subprocess.run(group_query, capture_output=True)
     sp.check_returncode()
-    groups = json.loads(sp.stdout)
-    print(groups)
+    groups = json.loads(sp.stdout).get('group_names', [])
     print(args)
     print(base_cfg.__dict__)
 
@@ -141,4 +140,6 @@ if __name__ == '__main__':
             f'scope-{scope_name}-{access}': access.upper()
             for access in accesses
         }
-        print(access_groups)
+
+        missing_groups = [group for group in access_groups if group not in groups]
+        print(missing_groups)
