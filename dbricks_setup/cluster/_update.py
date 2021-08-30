@@ -3,10 +3,8 @@ from argparse import Namespace
 import logging
 
 from ..utils._groups import create_groups, get_groups
-from ..utils._profile import extract_profile, set_aad_scope
-from ..utils.scope._acl import get_acls, set_acls
-from ..utils.scope._create import create_scope
-from ..utils.scope._delete import delete_scope
+from ..utils._profile import extract_profile
+from ..utils.cluster._acl import set_acls
 from ..utils.cluster._config import create_config
 from ..utils.cluster._create import create_cluster
 from ..utils.cluster._delete import terminate_cluster
@@ -74,9 +72,6 @@ def update_cluster_cli(args: Namespace):
     if missing_groups:
         create_groups(missing_groups, profile)
 
+    for cluster in matching_clusters:
+        set_acls(access_groups, cluster['cluster_id'], base_config)
     return
-    # Get the existing acls for the secret scope
-    acls = get_acls(scope_name, profile)
-
-    # Update the acls
-    set_acls(acls, access_groups, scope_name, profile)
