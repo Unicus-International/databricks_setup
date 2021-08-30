@@ -526,3 +526,24 @@ if __name__ == '__main__':
                 logging.warning(f'Terminating cluster {cluster_name} with id {cluster_id}')
                 sp = subprocess.run(terminate_query, capture_output=True)
                 sp.check_returncode()
+
+        access_groups = {
+            f'cluster-{cluster_name}-manage': 'CAN_MANAGE',
+            f'cluster-{cluster_name}-restart': 'CAN_RESTART',
+            f'cluster-{cluster_name}-attach': 'CAN_ATTACH_TO',
+        }
+
+        # Filter the missing groups
+        missing_groups = [group for group in access_groups if group not in groups]
+        if missing_groups:
+            logging.info(f'Creating groups: {missing_groups}')
+
+        # Create groups
+        for group in missing_groups:
+            create_query = f'databricks groups create --profile {profile}'
+            create_query += f' --group-name {group}'
+
+            # Run and enforce success
+            logging.info(f'Creating Group: {group}')
+            sp = subprocess.run(create_query, capture_output=True)
+            sp.check_returncode()
