@@ -21,16 +21,38 @@ required_args = cluster_parser.add_argument_group('required arguments')
 cluster_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
 required_args.add_argument('--name', type=str, help='The the cluster name', required=True)
 
-scope_parser = subparsers.add_parser('scope', help='Secret scope commands')
+# scope level commands
+scope_parser = subparsers.add_parser(
+    'scope',
+    help='Secret scope commands',
+    description='Scope level commands'
+)
 scope_parser.set_defaults(which='scope')
-required_args = scope_parser.add_argument_group('required arguments')
+scope_subparsers = scope_parser.add_subparsers(help='Sub commands')
+
+# Optional arguments
 scope_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
-scope_parser.add_argument('--scope-name', type=str, help='Name override for the secret scope')
+
+# scope update commands
+scope_update_parser = scope_subparsers.add_parser(
+    'update',
+    help='Secret scope configuration update commands',
+    description="Update/create the configuration for a key vault backed secret scope"
+)
+scope_update_parser.set_defaults(which='scope_update')
+
+# Optional arguments
+scope_update_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+scope_update_parser.add_argument('--scope-name', type=str, help='Name override for the secret scope')
+
+# Required arguments
+required_args = scope_update_parser.add_argument_group('required arguments')
 required_args.add_argument('--key-vault', type=str, help='The the key vault name', required=True)
 required_args.add_argument('--resource-id', type=str, help='The the key vault resource id', required=True)
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    print(args)
 
     # Query what groups are available
     group_query = 'databricks groups list'
@@ -51,10 +73,8 @@ if __name__ == '__main__':
     sp = subprocess.run(group_query, capture_output=True)
     sp.check_returncode()
     groups = json.loads(sp.stdout).get('group_names', [])
-    print(args)
-    print(base_cfg.__dict__)
 
-    if args.which == 'scope':
+    if args.which == 'scope_update':
 
         scope_query = 'databricks secrets list-scopes'
 
@@ -226,4 +246,3 @@ if __name__ == '__main__':
                 logging.warning(f'Removing acl to {scope_name} for {principal}')
                 sp = subprocess.run(acl_query, capture_output=True)
                 sp.check_returncode()
-        print(existing_acls)
