@@ -2,6 +2,10 @@ import json
 import subprocess
 from typing import List
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_groups(profile: str) -> List[str]:
     """Get the list of groups from the configured workspace
@@ -13,6 +17,7 @@ def get_groups(profile: str) -> List[str]:
     """
 
     # Query what groups are available
+    logger.info('Extracting group information')
     group_query = f'databricks groups list --profile {profile}'
 
     # Run the group query

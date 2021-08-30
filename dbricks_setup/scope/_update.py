@@ -6,6 +6,9 @@ from ..utils._groups import get_groups
 from ..utils._profile import extract_profile, set_aad_scope
 from ..utils.scope._extract import extract_scopes
 from ..utils.scope._delete import delete_scope
+from ..utils.scope._create import create_scope
+
+logger = logging.getLogger(__name__)
 
 
 def update_scope(args: Namespace):
@@ -31,7 +34,7 @@ def update_scope(args: Namespace):
 
     # Check scope existence
     if scope_name in scopes and not args.f:
-        logging.warning(
+        logger.warning(
             f'Scope {scope_name} already exists. Please remove if misconfigured, consider using the -f flag to force an update.')
     else:
         create = args.f or scope_name not in scopes
@@ -45,3 +48,9 @@ def update_scope(args: Namespace):
             if scope_name in scopes:
                 # Delete the scope
                 delete_scope(scope_name, profile)
+
+            create_scope(
+                scope=scope_name,
+                resource_id=args.resource_id,
+                key_vault_name=args.key_vault
+            )

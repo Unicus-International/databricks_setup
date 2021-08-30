@@ -3,9 +3,13 @@ import json
 import os
 from argparse import Namespace
 from typing import Tuple
+
+import logging
 from databricks_cli.configure.provider import DatabricksConfig, update_and_persist_config
 
 from databricks_cli.configure.provider import DEFAULT_SECTION, ProfileConfigProvider
+
+logger = logging.getLogger(__name__)
 
 
 def extract_profile(args: Namespace) -> Tuple[str, DatabricksConfig]:
@@ -64,6 +68,7 @@ def set_aad_scope(base_config: DatabricksConfig):
 
     # Get the up to date token
     with open(token_file, 'r') as f:
+        logger.info('Updating AAD profile')
         token_data = json.load(f)
         update_and_persist_config(
             'AAD',

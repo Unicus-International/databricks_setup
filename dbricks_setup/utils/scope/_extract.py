@@ -1,6 +1,10 @@
 import subprocess
 from typing import Dict
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def extract_scopes(profile: str) -> Dict[str, Dict[str, str]]:
     """Get the list of secret scopes from the configured workspace
@@ -12,6 +16,7 @@ def extract_scopes(profile: str) -> Dict[str, Dict[str, str]]:
     """
 
     # Construct the query
+    logger.info('Extracting scope information')
     scope_query = 'databricks secrets list-scopes'
     scope_query += f' --profile {profile}'
 
