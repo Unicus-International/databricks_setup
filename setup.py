@@ -9,7 +9,7 @@ setup(
     author_email='sindreosnes.git@gmail.com',
     version='0.0.1',
     include_package_data=True,
-    packages=find_packages( exclude=['tests*']),
+    packages=find_packages(exclude=['tests*']),
     install_requires=[
         'databricks-cli',
     ],

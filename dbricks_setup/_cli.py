@@ -1,6 +1,8 @@
 import argparse
 import logging
 
+from .scope._update import update_scope
+
 
 def cli():
     """Wrapper around the cli
@@ -10,6 +12,7 @@ def cli():
 
     # Top level
     parser = argparse.ArgumentParser(description='CLI for helping set up databricks.')
+    parser.set_defaults(which='base')
     subparsers = parser.add_subparsers(help='Sub commands')
 
     # Optional arguments
@@ -117,6 +120,9 @@ def cli():
 
     # Initialize the cli
     args = parser.parse_args()
+
+    if args.which == 'scope_update':
+        update_scope(args)
 
 
 if __name__ == '__main__':
