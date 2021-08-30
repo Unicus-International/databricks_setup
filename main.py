@@ -45,7 +45,6 @@ cluster_update_parser.add_argument('-r', action='store_true', help='Allow cluste
 required_args = cluster_update_parser.add_argument_group('required arguments')
 required_args.add_argument('--name', type=str, help='The cluster name', required=True)
 
-
 # cluster delete commands
 cluster_delete_parser = cluster_subparsers.add_parser(
     'delete',
@@ -591,7 +590,7 @@ if __name__ == '__main__':
             ]
         }
 
-        # Get the existing permissions
+        # Update the existing permissions
         for cluster in matching_clusters:
             cluster_id = cluster['cluster_id']
             api_command = f'/permissions/clusters/{cluster_id}'
@@ -602,3 +601,144 @@ if __name__ == '__main__':
                 json=permissions
             )
             logging.info(f'Permissions updated to {json.dumps(r.json(), indent=2)}')
+
+    if args.which == 'cluster_delete':
+        cluster_name = args.name.lower()
+
+        # Query what clusters exists
+        cluster_query = 'databricks clusters list'
+        cluster_query += f' --profile {profile}'
+
+        # Run and enforce success
+        sp = subprocess.run(cluster_query, capture_output=True)
+        sp.check_returncode()
+
+        # Extract the existing scopes
+        cluster_lines = [l.strip('\r') for l in sp.stdout.decode().split('\n')]
+        cluster_lines = [l for l in cluster_lines if l.replace('-', '').strip()]
+        cluster_lines = [[elem for elem in l.split(' ') if elem] for l in cluster_lines]
+        existing_clusters = [{'cluster_id': cluster[0], 'name': cluster[1], 'status': cluster[2]} for cluster in
+                             cluster_lines]
+
+        # Get the clusters matching the desired name
+        matching_clusters = [
+            cluster
+            for cluster
+            in existing_clusters
+            if cluster['name'].lower() == cluster_name
+        ]
+
+        # Construct the access groups
+        access_groups = {
+            f'cluster-{cluster_name}-manage': 'CAN_MANAGE',
+            f'cluster-{cluster_name}-restart': 'CAN_RESTART',
+            f'cluster-{cluster_name}-attach': 'CAN_ATTACH_TO',
+        }
+
+        # Filter the missing groups
+        existing_groups = [group for group in access_groups if group in groups]
+
+        # Access the permissions api
+        api_version = '/api/2.0'
+        headers = {'Authorization': f"Bearer {base_cfg.token}"}
+
+        permissions = {
+        }
+
+        # Get the existing permissions
+        for cluster in matching_clusters:
+            cluster_id = cluster['cluster_id']
+            permissions[cluster_id] = []
+            api_command = f'/permissions/clusters/{cluster_id}'
+            url = f"{base_cfg.host.rstrip('/')}{api_version}{api_command}"
+            r = requests.get(
+                url=url,
+                headers=headers
+            )
+
+            # Get the permissions for the cluster
+            cluster_permissions = r.json()
+            for acl in cluster_permissions['access_control_list']:
+                principal = acl.get('group_name', acl.get('user_name', 'UNKOWN'))
+                acl_permissions = set(
+                    permission['permission_level']
+                    for permission
+                    in acl['all_permissions']
+                    if not permission['inherited']
+                )
+                if acl_permissions:
+                    permissions[cluster_id].append(
+                        {
+                            'principal': principal,
+                            'permissions': sorted(acl_permissions)
+                        }
+                    )
+            # Remove empty lists
+            if not permissions[cluster_id]:
+                permissions.pop(cluster_id)
+
+        # Set deletions
+        to_delete = {
+            'clusters': matching_clusters,
+            'groups': existing_groups,
+            'permissions': permissions
+        }
+
+        if (not args.a and not args.s) or not matching_clusters:
+            to_delete.pop('clusters')
+        if (not args.a and not args.g) or not existing_groups:
+            to_delete.pop('groups')
+        if (not args.a and not args.c) or not permissions:
+            to_delete.pop('permissions')
+
+        deletion_warning = ''
+        if 'clusters' in to_delete:
+            deletion_warning += '\nClusters:'
+            for cluster in to_delete['clusters']:
+                deletion_warning += f'\n\t{cluster["cluster_id"]}: {cluster["name"]}'
+        if 'groups' in to_delete:
+            deletion_warning += '\nGroups:'
+            for group in to_delete['groups']:
+                deletion_warning += f'\n\t{group}'
+        if 'permissions' in to_delete:
+            deletion_warning += '\nAcls:'
+            for cluster_id, permission_list in to_delete['permissions'].items():
+                deletion_warning += f'\n\t{cluster_id}:'
+                for permission in permission_list:
+                    deletion_warning += f'\n\t\t{(permission["principal"]+":").ljust(30)}{permission["permissions"]}'
+
+        deletion_warning = 'The following resources will be deleted:' + deletion_warning
+        if args.d:
+            print(deletion_warning)
+        elif to_delete and (args.q or input(deletion_warning + '\n(Y/N):').upper() == 'Y'):
+            for cluster_id in to_delete.get('permissions', []):
+                # Remove permissions
+                logging.warning(f'Removing acls or {cluster_id}')
+                api_command = f'/permissions/clusters/{cluster_id}'
+                url = f"{base_cfg.host.rstrip('/')}{api_version}{api_command}"
+                r = requests.put(
+                    url=url,
+                    headers=headers,
+                    json={'access_control_list': []}
+                )
+            for group in to_delete.get('groups', []):
+                # Remove the existing group
+                group_query = 'databricks groups delete'
+                group_query += f' --profile {profile}'
+                group_query += f' --group-name {group}'
+
+                # Run and enforce success
+                logging.warning(f'Removing group {group}')
+                sp = subprocess.run(group_query, capture_output=True)
+                sp.check_returncode()
+            for cluster in to_delete.get('clusters', []):
+                # Delete the scope
+                cluster_id = cluster['cluster_id']
+                logging.info(f'Deleting cluster: {cluster_id}')
+                delete_query = f'databricks clusters permanent-delete --profile {profile}'
+                delete_query += f' --cluster-id {cluster_id}'
+
+                # Run and enforce success
+                logging.warning(f'Deleting cluster {cluster_id}')
+                sp = subprocess.run(delete_query, capture_output=True)
+                sp.check_returncode()
