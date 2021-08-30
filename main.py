@@ -5,6 +5,8 @@ import subprocess
 import json
 
 import logging
+
+import time
 from databricks_cli.configure.provider import ProfileConfigProvider, DEFAULT_SECTION, update_and_persist_config, \
     DatabricksConfig
 
@@ -39,6 +41,7 @@ cluster_update_parser.set_defaults(which='cluster_update')
 
 # Optional arguments
 cluster_update_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
+cluster_update_parser.add_argument('-r', action='store_true', help='Allow cluster to run after creation')
 
 # Required arguments
 required_args = cluster_update_parser.add_argument_group('required arguments')
@@ -469,4 +472,57 @@ if __name__ == '__main__':
         # Get the last version
         last_version = valid_versions[-1]
 
-        print(last_version)
+        # Set the cluster json
+        cluster_config = {
+            "cluster_name": cluster_name,
+            "spark_version": last_version['key'],
+            "spark_conf": {
+                "spark.databricks.delta.preview.enabled": "true"
+            },
+            "node_type_id": "Standard_DS3_v2",
+            "driver_node_type_id": "Standard_DS3_v2",
+            "autotermination_minutes": 60,
+            "enable_elastic_disk": True,
+            "disk_spec": {},
+            "azure_attributes": {
+                "first_on_demand": 1,
+                "availability": "SPOT_WITH_FALLBACK_AZURE",
+                "spot_bid_max_price": -1.0
+            },
+            "instance_source": {
+                "node_type_id": "Standard_DS3_v2"
+            },
+            "driver_instance_source": {
+                "node_type_id": "Standard_DS3_v2"
+            },
+            "autoscale": {
+                "min_workers": 1,
+                "max_workers": 2
+            },
+        }
+
+        if not matching_clusters:
+            # Create the cluster
+            cluster_str = json.dumps(cluster_config, ensure_ascii=False).replace('"', '\\"')
+            create_query = 'databricks clusters create'
+            create_query += f' --profile {profile}'
+            create_query += f' --json "{cluster_str}"'
+
+            # Run and enforce success
+            logging.info(f'Creating cluster {cluster_name}')
+            sp = subprocess.run(create_query, capture_output=True)
+            sp.check_returncode()
+
+            # Filter the spark versions
+            cluster_id = json.loads(sp.stdout)['cluster_id']
+
+            # Terminate cluster for cost savings
+            if not args.r:
+                terminate_query = 'databricks clusters delete'
+                terminate_query += f' --profile {profile}'
+                terminate_query += f' --cluster-id {cluster_id}'
+
+                # Run and enforce success
+                logging.warning(f'Terminating cluster {cluster_name} with id {cluster_id}')
+                sp = subprocess.run(terminate_query, capture_output=True)
+                sp.check_returncode()
