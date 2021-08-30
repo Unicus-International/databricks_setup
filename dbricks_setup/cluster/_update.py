@@ -47,45 +47,26 @@ def update_cluster_cli(args: Namespace):
     # Create the cluster
     if not matching_clusters:
         cluster_id = create_cluster(profile, cluster_config)
+        cluster_status = 'PENDIING'
 
         # Terminate the newly started cluster
         if not args.r:
             terminate_cluster(cluster_id, cluster_name, profile)
-    return
+            cluster_status = 'TERMINATED'
 
-    # Check scope name
-    scope_name = args.scope_name
-    if not scope_name:
-        scope_name = args.key_vault
+        # Add the new cluster to the configuration
+        matching_clusters.append(
+            {
+                'name': cluster_name,
+                'cluster_id': cluster_id,
+                'status': cluster_status
+            }
+        )
 
-    # Check scope existence
-    if scope_name in scopes and not args.f:
-        logger.warning(
-            f'Scope {scope_name} already exists. Please remove if misconfigured, consider using the -f flag to force an update.')
-    else:
-        create = args.f or scope_name not in scopes
-
-        # If the scope is missing or an update is forced, recreate it
-        if create:
-            # Update the azure ad profile if needed
-            set_aad_scope(base_config)
-
-            # Delete if exists
-            if scope_name in scopes:
-                # Delete the scope
-                delete_scope(scope_name, profile)
-
-            create_scope(
-                scope=scope_name,
-                resource_id=args.resource_id,
-                key_vault_name=args.key_vault
-            )
-
-    # Construct the access groups
-    accesses = ['read', 'write', 'manage']
     access_groups = {
-        f'scope-{scope_name}-{access}': access.upper()
-        for access in accesses
+        f'cluster-{cluster_name}-manage': 'CAN_MANAGE',
+        f'cluster-{cluster_name}-restart': 'CAN_RESTART',
+        f'cluster-{cluster_name}-attach': 'CAN_ATTACH_TO',
     }
 
     # Filter and create the missing groups
@@ -93,6 +74,7 @@ def update_cluster_cli(args: Namespace):
     if missing_groups:
         create_groups(missing_groups, profile)
 
+    return
     # Get the existing acls for the secret scope
     acls = get_acls(scope_name, profile)
 
