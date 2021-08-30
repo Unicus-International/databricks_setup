@@ -3,6 +3,7 @@ from databricks_cli.configure.provider import DatabricksConfig
 
 from ..utils._groups import get_groups
 from ..utils._profile import extract_profile
+from ..utils.scope._extract import extract_scopes
 
 
 def update_scope(args: Namespace):
@@ -18,4 +19,6 @@ def update_scope(args: Namespace):
     # Get the workspace groups
     groups = get_groups(profile)
 
-    print(groups)
+    # Get the existing scopes
+    scopes = extract_scopes(profile)
+    print(scopes)
