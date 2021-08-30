@@ -29,7 +29,6 @@ scope_parser.add_argument('--scope-name', type=str, help='Name override for the 
 required_args.add_argument('--key-vault', type=str, help='The the key vault name', required=True)
 required_args.add_argument('--resource-id', type=str, help='The the key vault resource id', required=True)
 
-
 if __name__ == '__main__':
     args = parser.parse_args()
 
@@ -73,7 +72,8 @@ if __name__ == '__main__':
             token_data = json.load(f)
 
         # Get the expiration and enforce rollover
-        expiration = datetime.datetime.strptime(token_data.get('expiresOn', '2000-01-01 00:00:00.000000'),'%Y-%m-%d %H:%M:%S.%f')
+        expiration = datetime.datetime.strptime(token_data.get('expiresOn', '2000-01-01 00:00:00.000000'),
+                                                '%Y-%m-%d %H:%M:%S.%f')
         if expiration < datetime.datetime.now() + datetime.timedelta(minutes=5):
             error_message = "Azure AD token for this cli has/is about to expire."
             error_message += f"\nPlease run:"
@@ -97,7 +97,8 @@ if __name__ == '__main__':
         # Update the AAD profile and validate
         cfg = ProfileConfigProvider('AAD').get_config()
         if cfg is None:
-            raise EnvironmentError(f'The profile {profile} has not been configured please add it to the databricks cli.')
+            raise EnvironmentError(
+                f'The profile {profile} has not been configured please add it to the databricks cli.')
         print(cfg.__dict__)
 
         scope_query = 'databricks secrets list-scopes'
@@ -130,6 +131,7 @@ if __name__ == '__main__':
             create_query += f' --scope-backend-type AZURE_KEYVAULT'
             create_query += f' --resource-id {args.resource_id}'
             create_query += f' --dns-name https://{args.key_vault}.vault.azure.net/'
+
+            # Run and enforce success
             sp = subprocess.run(create_query, capture_output=True)
             sp.check_returncode()
-
