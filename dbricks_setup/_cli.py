@@ -42,6 +42,7 @@ def cli():
     # Optional arguments
     cluster_update_parser.add_argument('--profile', type=str, help='The databricks cli profile to use')
     cluster_update_parser.add_argument('-r', action='store_true', help='Allow cluster to run after creation')
+    cluster_update_parser.add_argument('-e', action='store_true', help='Force cluster reconfiguration, cluster must be terminated first')
 
     # Required arguments
     required_args = cluster_update_parser.add_argument_group('required arguments')
@@ -121,6 +122,7 @@ def cli():
 
     # Initialize the cli
     args = parser.parse_args()
+    print(args)
 
     if args.which == 'scope_update':
         update_scope_cli(args)

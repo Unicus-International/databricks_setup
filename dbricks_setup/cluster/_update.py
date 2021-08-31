@@ -77,7 +77,7 @@ def update_cluster_cli(args: Namespace):
         set_acls(access_groups, cluster['cluster_id'], base_config)
 
         # Update the cluster configuration
-        if cluster['status'] == 'TERMINATED':
+        if cluster['status'] == 'TERMINATED' and args.e:
             cluster_config['cluster_id'] = cluster['cluster_id']
             edit_cluster(profile, cluster_config)
 
