@@ -112,9 +112,9 @@ def delete_cluster_cli(args: Namespace):
 
     # Delete items
     elif to_delete and (args.q or input(deletion_warning + '\n(Y/N):').upper() == 'Y'):
-        for cluster_id in to_delete.get('permissions', []):
+        for cluster_id in to_delete.get('permissions', {}):
             # Remove permissions
-            set_acls([], cluster_id, base_config)
+            set_acls({}, cluster_id, base_config)
         for group in to_delete.get('groups', []):
             # Remove the existing group
             delete_group(group, profile)
