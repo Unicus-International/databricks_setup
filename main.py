@@ -174,7 +174,7 @@ if __name__ == '__main__':
             f'cluster-{cluster_name}-attach': 'CAN_ATTACH_TO',
         }
 
-        # Filter the missing groups
+        # Filter the existing groups
         existing_groups = [group for group in access_groups if group in groups]
 
         # Access the permissions api

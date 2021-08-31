@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from .cluster import delete_scope_cli, update_cluster_cli
+from .cluster import delete_cluster_cli, update_cluster_cli
 from .scope import delete_scope_cli, update_scope_cli
 
 
@@ -130,6 +130,8 @@ def cli():
         delete_scope_cli(args)
     elif args.which == 'cluster_update':
         update_cluster_cli(args)
+    elif args.which == 'cluster_delete':
+        delete_cluster_cli(args)
 
 
 if __name__ == '__main__':

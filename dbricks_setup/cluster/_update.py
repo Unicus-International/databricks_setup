@@ -61,6 +61,7 @@ def update_cluster_cli(args: Namespace):
             }
         )
 
+    # Set access groups
     access_groups = {
         f'cluster-{cluster_name}-manage': 'CAN_MANAGE',
         f'cluster-{cluster_name}-restart': 'CAN_RESTART',
