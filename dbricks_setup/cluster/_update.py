@@ -6,7 +6,7 @@ from ..utils._groups import create_groups, get_groups
 from ..utils._profile import extract_profile
 from ..utils.cluster._acl import set_acls
 from ..utils.cluster._config import create_config
-from ..utils.cluster._create import create_cluster
+from ..utils.cluster._create import create_cluster, edit_cluster
 from ..utils.cluster._delete import terminate_cluster
 from ..utils.cluster._extract import extract_clusters
 
@@ -72,6 +72,13 @@ def update_cluster_cli(args: Namespace):
     if missing_groups:
         create_groups(missing_groups, profile)
 
+    # Update the clusters
     for cluster in matching_clusters:
         set_acls(access_groups, cluster['cluster_id'], base_config)
+
+        # Update the cluster configuration
+        if cluster['status'] == 'TERMINATED':
+            cluster_config['cluster_id'] = cluster['cluster_id']
+            edit_cluster(profile, cluster_config)
+
     return
